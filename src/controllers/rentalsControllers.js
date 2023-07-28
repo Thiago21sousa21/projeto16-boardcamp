@@ -8,8 +8,7 @@ export async function insertRental(req, res) {
         if(!customer.rows[0])return res.status(404).send('Usuário não encontrado');
 
         const game = await db.query(`SELECT * FROM games WHERE id = $1`, [gameId]);
-        if(!game.rows[0])return res.status(404).send('Game não encontrado');
-    
+        if(!game.rows[0])return res.status(404).send('Game não encontrado');    
 
         await db.query(`
             INSERT INTO rentals 
