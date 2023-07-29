@@ -1,16 +1,18 @@
 import db from "../database/databaseConnection.js";
 
 
-// export  function getCustomers (table){   
-//     return async(req, res)=>{
-//         try{
-//             const games = await db.query(`SELECT * FROM ${table}`);
-//             res.send(games.rows)
-//         }catch(error){
-//             res.status(500).send(error.message);
-//         }
-//     } 
-// }
+export async function getCustomers (req, res){  
+   
+        try{
+            const games = await db.query(`
+            SELECT id, name, phone, cpf, TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday
+            FROM customers`);
+            res.send(games.rows)
+        }catch(error){
+            res.status(500).send(error.message);
+        }
+    
+}
 
 export async function  insertCustomer(req, res){
     const {name, phone, cpf, birthday }= req.body;
