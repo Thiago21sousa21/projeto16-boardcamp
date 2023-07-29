@@ -15,7 +15,7 @@ export async function insertRental(req, res) {
                 ("customerId", "gameId", "rentDate", "daysRented", "returnDate", "originalPrice", "delayFee")
                 VALUES ( $1, $2, $3, $4, $5, $6, $7)
         `, [customerId, gameId, dayjs().format('YYYY-MM-DD'), daysRented, null, game.rows[0].pricePerDay * daysRented, null]);
-        res.send('deu certo')
+        res.sendStatus(201);
     } catch (error) {
         res.status(500).send(error.message);
     }
