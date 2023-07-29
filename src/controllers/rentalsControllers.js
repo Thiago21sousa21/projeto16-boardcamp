@@ -42,7 +42,7 @@ export async function getRentals(req, res) {
                     id: e.customerId,
                     name: e.customerName
                 },
-                gamer: {
+                game: {
                     id: e.gameId,
                     name: e.gameName
                 }
