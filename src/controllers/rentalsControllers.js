@@ -49,7 +49,35 @@ export async function getRentals(req, res) {
         });
         res.send(result);
 
+
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+}
+
+export async function finishRental(req, res) {
+    const {id} = req.params;
+    const returnDate = dayjs('2023-08-1');
+    let delayFee = null;
+
+    try {
+        const rental = await db.query(`SELECT * FROM rentals WHERE id = $1`, [id]);
+        if (!rental.rows[0]) return res.status(404).send('Aluguel não encontrado');
+        if (rental.rows[0].returnDate != null ) return res.status(400).send('Aluguel já finalizado');
+
+        const realDays  = returnDate.diff(rental.rows[0].rentDate, 'day');
+        const {daysRented, originalPrice } = rental.rows[0];
+        if( realDays > daysRented ) {
+            delayFee = (realDays - daysRented)*originalPrice;
+        }
+
+        await db.query(`
+            UPDATE rentals
+                SET "returnDate"= $1, "delayFee" = $2
+                WHERE id = $3
+        `,[returnDate, delayFee, id]);
         
+        res.send('deu certo')
     } catch (error) {
         res.status(500).send(error.message);
     }
