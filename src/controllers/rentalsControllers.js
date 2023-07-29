@@ -10,9 +10,9 @@ export async function insertRental(req, res) {
         const game = await db.query(`SELECT * FROM games WHERE id = $1`, [gameId]);
         if (!game.rows[0]) return res.status(404).send('Game não encontrado');
         let {stockTotal} = game.rows[0];
-        if (stockTotal <= 0) return res.status(400).send('Game indisponivel no momento');
-        stockTotal--;
-        await db.query(`UPDATE games SET "stockTotal" = $1 WHERE id = $2 `,[stockTotal, gameId]);
+        if (stockTotal <= 0) return res.status(400).send('Game sem stock no momento');
+        const amountRented = await db.query(`SELECT  FROM rentals WHERE "gameId" = $1`, [gameId]);
+        if( amountRented.rows.length >= stockTotal )return res.status(400).send('Game indisponivel no momento');
 
         await db.query(`
             INSERT INTO rentals 
