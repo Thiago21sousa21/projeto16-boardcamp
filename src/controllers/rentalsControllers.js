@@ -61,7 +61,7 @@ export async function getRentals(req, res) {
 
 export async function finishRental(req, res) {
     const {id} = req.params;
-    const returnDate = dayjs('2023-08-1');
+    const returnDate = dayjs();
     let delayFee = null;
 
     try {
