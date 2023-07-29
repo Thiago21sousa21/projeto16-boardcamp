@@ -58,7 +58,7 @@ export async function  updateCustomer(req, res){
         const conflict = await db.query(`SELECT * FROM customers
             WHERE cpf = $1
         `, [cpf]);
-        if (conflict.rows[0]){
+        if (conflict.rows[0]  && conflict.rows[0].id != id ){
             return res.status(409).send("Esse cpf já existe.");
         }
 
