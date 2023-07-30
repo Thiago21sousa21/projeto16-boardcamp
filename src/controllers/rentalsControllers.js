@@ -4,20 +4,20 @@ import dayjs from "dayjs";
 export async function insertRental(req, res) {
     const { customerId, gameId, daysRented } = req.body;
     try {
-        const customer = await db.query(`SELECT * FROM customers WHERE id = $1`, [customerId]);
+        const customer = await db.query(`SELECT * FROM customers WHERE id = $1;`, [customerId]);
         if (!customer.rows[0]) return res.status(404).send('Usuário não encontrado');
 
-        const game = await db.query(`SELECT * FROM games WHERE id = $1`, [gameId]);
+        const game = await db.query(`SELECT * FROM games WHERE id = $1;`, [gameId]);
         if (!game.rows[0]) return res.status(404).send('Game não encontrado');
         let {stockTotal} = game.rows[0];
         if (stockTotal <= 0) return res.status(400).send('Game sem stock no momento');
-        const amountRented = await db.query(`SELECT  FROM rentals WHERE "gameId" = $1`, [gameId]);
+        const amountRented = await db.query(`SELECT  FROM rentals WHERE "gameId" = $1;`, [gameId]);
         if( amountRented.rows.length >= stockTotal )return res.status(400).send('Game indisponivel no momento');
 
         await db.query(`
             INSERT INTO rentals 
                 ("customerId", "gameId", "rentDate", "daysRented", "returnDate", "originalPrice", "delayFee")
-                VALUES ( $1, $2, $3, $4, $5, $6, $7)
+                VALUES ( $1, $2, $3, $4, $5, $6, $7);
         `, [customerId, gameId, dayjs().format('YYYY-MM-DD'), daysRented, null, game.rows[0].pricePerDay * daysRented, null]);
         res.sendStatus(201);
     } catch (error) {
@@ -65,20 +65,23 @@ export async function finishRental(req, res) {
     let delayFee = null;
 
     try {
-        const rental = await db.query(`SELECT * FROM rentals WHERE id = $1`, [id]);
+        const rental = await db.query(`
+            SELECT rentals."daysRented", rentals."returnDate", rentals."rentDate", games."pricePerDay" FROM rentals 
+                JOIN games ON rentals."gameId" = games.id
+                WHERE rentals.id = $1;`, [id]);
         if (!rental.rows[0]) return res.status(404).send('Aluguel não encontrado');
         if (rental.rows[0].returnDate != null ) return res.status(400).send('Aluguel já finalizado');
 
         const realDays  = returnDate.diff(rental.rows[0].rentDate, 'day');
-        const {daysRented, originalPrice } = rental.rows[0];
+        const {daysRented, pricePerDay } = rental.rows[0];
         if( realDays > daysRented ) {
-            delayFee = (realDays - daysRented)*originalPrice;
+            delayFee = (realDays - daysRented)*pricePerDay;
         }
 
         await db.query(`
             UPDATE rentals
                 SET "returnDate"= $1, "delayFee" = $2
-                WHERE id = $3
+                WHERE id = $3;
         `,[returnDate, delayFee, id]);
         
         res.send('deu certo')
@@ -91,12 +94,12 @@ export async function deleteRental(req, res) {
     const {id} = req.params;
 
     try {
-        const rental = await db.query(`SELECT * FROM rentals WHERE id = $1`, [id]);
+        const rental = await db.query(`SELECT * FROM rentals WHERE id = $1;`, [id]);
         if (!rental.rows[0]) return res.status(404).send('Aluguel não encontrado');
         const {returnDate} = rental.rows[0];
         if (!returnDate) return res.status(400).send('Aluguel não finalizado');
 
-        await db.query(`DELETE FROM rentals WHERE id = $1`,[id]);           
+        await db.query(`DELETE FROM rentals WHERE id = $1;`,[id]);           
         res.sendStatus(200);
     } catch (error) {
         res.status(500).send(error.message);
